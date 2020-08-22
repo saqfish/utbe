@@ -1,10 +1,8 @@
+#include <json.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
-
-
-#define PATH_MAX 50
 
 char *mkprms(char *url, int nargs, ...);
 char *mkcmd(char *cmd, char *arg);
@@ -13,27 +11,49 @@ int
 main(int arc, char **argv){
 	FILE *fp;
 	int status;
-	char line[100];
-	char *qurl;
-	char *cmd;
+	size_t len;
+	ssize_t nread;
+	char *line = NULL;
+	char *lines;
+	char *qurl, *cmd;
+
+	json_object *jobj = NULL;
+
 
 	char *url = "https://www.googleapis.com/youtube/v3/search?";
 
-        qurl = mkprms(url, 3, "part", "snippet", "q", argv[1], "key", argv[2]);
-	
+	qurl = mkprms(url, 3, "part", "snippet", "q", argv[1], "key", argv[2]);
+
 	cmd = mkcmd("curl -s ", qurl);
 
 	printf("cmd: %s\n", cmd);
-	
-	char path[PATH_MAX];
 
-	fp = popen(cmd, "r");
+	//fp = popen(cmd, "r");
+	fp = fopen("test", "r");
 	if (fp == NULL) printf("popen-error\n");
 
-	while (fgets(line, 100, fp) != NULL)
-		printf("%s", line); 
+	int count = 0;
+	while ((nread = getline(&line, &len, fp)) != -1){
+		if(count) lines = realloc(lines, ((count+nread) * sizeof(char)));	
+		else  lines = malloc(sizeof(nread));	
+
+		strcat(lines, line);
+		count+=nread;
+	}
 
 	status = pclose(fp);
+
+	jobj = json_tokener_parse(lines);
+	
+	enum json_type type;	
+	json_object_object_foreach(jobj, key, val) {
+		type = json_object_get_type(val);
+		if(type == json_type_string){
+			printf("%s: %s\n",key,json_object_get_string(val));
+		}
+	}
+
+
 	free(cmd);
 	free(qurl);
 }
@@ -44,7 +64,7 @@ mkcmd(char *cmd, char *arg){
 
 	len = strlen(cmd) + strlen(arg) + 3;
 	str = malloc(len * sizeof(char));
-	
+
 	sprintf(str, "%s \'%s\'", cmd, arg);
 	return str;
 }
