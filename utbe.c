@@ -7,6 +7,14 @@
 char *mkprms(char *url, int nargs, ...);
 char *mkcmd(char *cmd, char *arg);
 
+typedef struct{
+	const char* publishedAt;
+	const char* channelId;
+	const char *title;
+	const char* description;
+	const char* channelTitle;
+} video;
+
 int
 main(int arc, char **argv){
 	FILE *fp;
@@ -16,6 +24,8 @@ main(int arc, char **argv){
 	char *line = NULL;
 	char *lines;
 	char *qurl, *cmd;
+
+	video videos[50];
 
 	json_object *jobj = NULL;
 
@@ -44,15 +54,58 @@ main(int arc, char **argv){
 	status = pclose(fp);
 
 	jobj = json_tokener_parse(lines);
+	json_object_iter iter;
 	
 	enum json_type type;	
-	json_object_object_foreach(jobj, key, val) {
+	json_object_object_foreachC(jobj, iter) {
+		json_object *val = iter.val;
+		char *key = iter.key;
 		type = json_object_get_type(val);
-		if(type == json_type_string){
-			printf("%s: %s\n",key,json_object_get_string(val));
+		if(type == json_type_array && (strcmp(key,"items") == 0)){
+			int len;
+			len = json_object_array_length(val);
+			for(int i=0; i<len; i++){
+				json_object_iter aiter;
+				json_object *aobj = NULL;
+				enum json_type atype;	
+
+				aobj = json_object_array_get_idx(val,i);
+
+				json_object_object_foreachC(aobj, aiter) {
+					json_object_iter siter;
+					json_object *sobj = NULL;
+					enum json_type stype;	
+					char *akey = aiter.key;
+
+					sobj = aiter.val;
+					stype = json_object_get_type(sobj);
+
+					if(stype == json_type_object && (strcmp(akey,"snippet") == 0)){
+						json_object_object_foreachC(sobj, siter) {
+							json_object_iter csiter;
+							json_object *csobj = NULL;
+							enum json_type cstype;	
+							char *skey = siter.key;
+						
+							csobj = siter.val;	
+							cstype = json_object_get_type(csobj);
+
+							if(cstype == json_type_string){
+								const char *str = json_object_get_string(csobj);
+								if((strcmp(skey, "publishedAt") == 0)) videos[i].publishedAt = str;
+								if((strcmp(skey, "channelId") == 0)) videos[i].channelId = str;
+								if((strcmp(skey, "title") == 0)) videos[i].title = str;
+								if((strcmp(skey, "description") == 0)) videos[i].description = str;
+								if((strcmp(skey, "channelTitle") == 0)) videos[i].channelTitle = str;
+							}
+
+
+						}
+					}
+				}
+			}
 		}
 	}
-
 
 	free(cmd);
 	free(qurl);
