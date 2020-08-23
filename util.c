@@ -37,7 +37,7 @@ mkprms(char *url, int nargs, ...){
 		else str = calloc(slen, sizeof(str));
 
 		if(i % 2) sym = "=";
-		else  sym = "=";
+		else  sym = "&";
 
 		strcat(str, sym);
 		strcat(str, arg);
