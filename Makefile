@@ -5,10 +5,10 @@ LDFLAGS = -L /lib
 CFLAGS = -I /usr/include/json-c/ 
 
 utbe: $(OBJS)
-	$(CC) $(OBJS) $(LDFLGS) $(LDLIBS) $(CFLAGS) -o utbe
+	$(CC) $(OBJS) $(LDLIBS) $(LDFLAGS) -o utbe
 
 utbe.o: utbe.c utbe.h 
-	$(CC) -c utbe.c
+	$(CC) $(CFLAGS) -c utbe.c
 
 util.o: util.c util.h
 	$(CC) -c util.c 
