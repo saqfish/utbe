@@ -22,7 +22,7 @@ main(int arc, char **argv){
 	mkprms(qurl, 1, "maxResults", "15");
 	cmd = mkcmd("curl -s ", qurl);
 
-	printf("cmd: %s\n", cmd);
+	//printf("cmd: %s\n", cmd);
 
 	//fp = popen(cmd, "r");
 	fp = fopen("test", "r");
@@ -58,24 +58,21 @@ getvids(char *str){
 
 	jobj = json_loads(str, 0, &jerr);
 
-	if(!jobj) printf("Couldn't parse JSON!\n");
+	if(!jobj || !json_is_object(jobj)) return NULL;
 	
 	items = json_object_get(jobj, "items");
 
-	if(!items) printf("Couldn't get items\n");
-
-	if(!json_is_array(items)) printf("Couldn't get items\n");
-	else printf("items is an array\n");
+	if(!items || !json_is_array(items)) return NULL;
 
 	for(int i=0; i<json_array_size(items); i++){
+		char *pm, cim, tm, dm, ctm;
 		json_t *item, *snippet;
 		json_t *publishedAt, *channelId, *title, *description, *channelTitle;
-		char *pm, cim, tm, dm, ctm;
+
 		item = json_array_get(items, i);
 		snippet = json_object_get(item, "snippet");
 
-		if(!snippet) printf("Couldn't get snippet\n");
-		if(!json_is_object(snippet)) printf("invalid snnipet\n");
+		if(!snippet ||!json_is_object(snippet)) return NULL;
 
 		publishedAt = json_object_get(snippet, "publishedAt");
 		channelId = json_object_get(snippet, "channelId");
@@ -83,11 +80,12 @@ getvids(char *str){
 		description = json_object_get(snippet, "description");
 		channelTitle = json_object_get(snippet, "channelTitle");
 
-		if(!json_is_string(publishedAt)) printf("Couldn't get publishedAt\n");
-		if(!json_is_string(channelId)) printf("Couldn't get channelId\n");
-		if(!json_is_string(title)) printf("Couldn't get title\n");
-		if(!json_is_string(description)) printf("Couldn't get description\n");
-		if(!json_is_string(channelTitle)) printf("Couldn't get channelTitle\n");
+		if(!json_is_string(publishedAt) || 
+				!json_is_string(channelId) 
+				|| !json_is_string(title) 
+				|| !json_is_string(description) 
+				|| !json_is_string(channelTitle)) 
+			return NULL;
 
 		strcpy(videos[i].publishedAt,json_string_value(publishedAt));
 		strcpy(videos[i].channelId, json_string_value(channelId));
@@ -95,7 +93,7 @@ getvids(char *str){
 		strcpy(videos[i].description, json_string_value(description));
 		strcpy(videos[i].channelTitle, json_string_value(channelTitle));
 	}
-	json_decref(jobj);
 
+	json_decref(jobj);
 	return videos;
 }

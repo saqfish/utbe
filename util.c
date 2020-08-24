@@ -29,8 +29,6 @@ mkprms(char *url, int nargs, ...){
 		char *sym;
 		arg = va_arg(ap, char *);
 
-		printf("%d(+%d) ", len, strlen(arg));
-
 		len += strlen(arg);
 
 		if(i % 2) sym = "=";
@@ -39,13 +37,8 @@ mkprms(char *url, int nargs, ...){
 		strcat(str,sym);
 		strcat(str,arg);
 
-		printf("%s%s:  %s\n", sym, arg, str);
 	}
 
-
-	printf("total: %d\n", strlen(url) + strlen(str));
-
 	strcat(url, str);	
-
 	return 1;	
 }
