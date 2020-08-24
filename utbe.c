@@ -17,10 +17,10 @@ main(int argc, char **argv){
 	int opt;
 	char *cmd;
 
-	while((opt = getopt(argc, argv, "q:c:k:")) != -1){
+	while((opt = getopt(argc, argv, "q:c:k:r:")) != -1){
 		switch(opt){
 			case 'q':
-				mkprms(qurl, 1, "part", "snippet", "q");
+				mkprms(qurl, 2, "part", "snippet", "q", optarg);
 				break;
 			case 'c':
 				mkprms(qurl, 1, "maxResults", optarg);
@@ -28,6 +28,17 @@ main(int argc, char **argv){
 			case 'k':
 				mkprms(qurl, 1, "key", optarg);
 				break;
+			case 'r':
+				{
+					char *tok, *tmp;
+					int pcnt = 0;
+					while(tok = strtok_r(optarg, ":", &optarg)){
+						if(pcnt % 2)mkprms(qurl, 1, tmp, tok);
+						else tmp = tok;
+						pcnt++;	
+					}
+					break;
+				}
 			default: pdie("Bad input\n");
 		}
 
@@ -36,12 +47,11 @@ main(int argc, char **argv){
 	if(argc == 1) exit(EXIT_FAILURE);
 
 	cmd = mkcmd("curl -s ", qurl);
+	printf("cmd: %s\n", cmd);
 	
 	if(!utbftch(cmd)) pdie("Couldn't get json\n");
 
 	if(!utbprse()) pdie("Couldn't parse json\n");
-
-	printf("%d: \n", vcnt);
 
 	for(int i=0;i<vcnt;i++)
 		printf("%s\n", vids[i].title);
