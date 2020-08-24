@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "utbe.h"
 #include "util.h"
@@ -12,11 +13,28 @@ char *jstr;
 video *vids;
 
 int
-main(int arc, char **argv){
+main(int argc, char **argv){
+	int opt;
 	char *cmd;
 
-	mkprms(qurl, 3, "part", "snippet", "q", argv[1], "key", argv[2]);
-	mkprms(qurl, 1, "maxResults", "10");
+	while((opt = getopt(argc, argv, "q:c:k:")) != -1){
+		switch(opt){
+			case 'q':
+				mkprms(qurl, 1, "part", "snippet", "q");
+				break;
+			case 'c':
+				mkprms(qurl, 1, "maxResults", optarg);
+				break;
+			case 'k':
+				mkprms(qurl, 1, "key", optarg);
+				break;
+			default: pdie("Bad input\n");
+		}
+
+	}
+
+	if(argc == 1) exit(EXIT_FAILURE);
+
 	cmd = mkcmd("curl -s ", qurl);
 	
 	if(!utbftch(cmd)) pdie("Couldn't get json\n");
@@ -64,13 +82,20 @@ utbftch(char *cmd){
 int
 utbprse(){
 	vids = calloc(50,sizeof(*vids));
-	json_t *jobj;
-	json_t *items;
+	json_t *jobj, *utberr, *items;
 	json_error_t jerr;
 
 	jobj = json_loads(jstr, 0, &jerr);
 
 	if(!jobj || !json_is_object(jobj)) return 0;
+
+	utberr = json_object_get(jobj, "error");
+	if(utberr && json_is_object(utberr)){
+		json_t *errmsg = json_object_get(utberr, "message");
+		if(errmsg || json_is_object(errmsg)) 
+			fprintf(stderr, "Error: %s\n", json_string_value(errmsg));
+		return 0;
+	}
 	
 	items = json_object_get(jobj, "items");
 
