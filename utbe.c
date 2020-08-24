@@ -6,63 +6,75 @@
 #include "utbe.h"
 #include "util.h"
 
+int vcnt;
+char qurl[MAX_URL] = URL; 
+char *jstr;
+video *vids;
+
 int
 main(int arc, char **argv){
+	char *cmd;
+
+	mkprms(qurl, 3, "part", "snippet", "q", argv[1], "key", argv[2]);
+	mkprms(qurl, 1, "maxResults", "10");
+	cmd = mkcmd("curl -s ", qurl);
+	
+	if(!utbftch(cmd)) pdie("Couldn't get json\n");
+
+	if(!utbprse()) pdie("Couldn't parse json\n");
+
+	printf("%d: \n", vcnt);
+
+	for(int i=0;i<vcnt;i++)
+		printf("%s\n", vids[i].title);
+
+	free(jstr);
+	free(cmd);
+	free(vids);
+	return EXIT_SUCCESS;
+}
+
+int
+utbftch(char *cmd){
 	FILE *fp;
 	int status;
-	char *str, *cmd;
-	char qurl[MAX_URL] = URL; 
 	char *line = NULL;
 	size_t len;
 	ssize_t nread;
 
-	video *vids;
-
-	mkprms(qurl, 3, "part", "snippet", "q", argv[1], "key", argv[2]);
-	mkprms(qurl, 1, "maxResults", "15");
-	cmd = mkcmd("curl -s ", qurl);
-
-	//printf("cmd: %s\n", cmd);
-
-	//fp = popen(cmd, "r");
-	fp = fopen("test", "r");
-	if (fp == NULL) printf("popen-error\n");
+	fp = popen(cmd, "r");
+	if (fp == NULL) return 0;
 
 	int count = 0;
 	while ((nread = getline(&line, &len, fp)) != -1){
-		if(count) str = realloc(str, ((count+nread) * sizeof(str)));	
-		else  str = calloc(nread, sizeof(str));	
+		if(count) jstr = realloc(jstr, ((count+nread) * sizeof(jstr)));	
+		else  jstr = calloc(nread, sizeof(jstr));	
 
+		if(jstr == NULL) return 0;
 
-		strcat(str, line);
+		strcat(jstr, line);
 		count+=nread;
 	}
 	free(line);
-
 	status = pclose(fp);
 
-	vids = getvids(str);
-
-	printf("%s\n", vids[2].title);
-	free(str);
-	free(cmd);
-	free(vids);
+	return 1;
 }
 
-video * 
-getvids(char *str){
-	video *videos = calloc(50,sizeof(*videos));
+int
+utbprse(){
+	vids = calloc(50,sizeof(*vids));
 	json_t *jobj;
 	json_t *items;
 	json_error_t jerr;
 
-	jobj = json_loads(str, 0, &jerr);
+	jobj = json_loads(jstr, 0, &jerr);
 
-	if(!jobj || !json_is_object(jobj)) return NULL;
+	if(!jobj || !json_is_object(jobj)) return 0;
 	
 	items = json_object_get(jobj, "items");
 
-	if(!items || !json_is_array(items)) return NULL;
+	if(!items || !json_is_array(items)) return 0;
 
 	for(int i=0; i<json_array_size(items); i++){
 		char *pm, cim, tm, dm, ctm;
@@ -72,7 +84,7 @@ getvids(char *str){
 		item = json_array_get(items, i);
 		snippet = json_object_get(item, "snippet");
 
-		if(!snippet ||!json_is_object(snippet)) return NULL;
+		if(!snippet ||!json_is_object(snippet)) return 0;
 
 		publishedAt = json_object_get(snippet, "publishedAt");
 		channelId = json_object_get(snippet, "channelId");
@@ -85,15 +97,15 @@ getvids(char *str){
 				|| !json_is_string(title) 
 				|| !json_is_string(description) 
 				|| !json_is_string(channelTitle)) 
-			return NULL;
-
-		strcpy(videos[i].publishedAt,json_string_value(publishedAt));
-		strcpy(videos[i].channelId, json_string_value(channelId));
-		strcpy(videos[i].title, json_string_value(title));
-		strcpy(videos[i].description, json_string_value(description));
-		strcpy(videos[i].channelTitle, json_string_value(channelTitle));
+			return 0;
+		vcnt++;
+		strcpy(vids[i].publishedAt,json_string_value(publishedAt));
+		strcpy(vids[i].channelId, json_string_value(channelId));
+		strcpy(vids[i].title, json_string_value(title));
+		strcpy(vids[i].description, json_string_value(description));
+		strcpy(vids[i].channelTitle, json_string_value(channelTitle));
 	}
 
 	json_decref(jobj);
-	return videos;
+	return 1;
 }

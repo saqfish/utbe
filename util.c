@@ -3,6 +3,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+void
+pdie(char *str) {
+	fprintf(stderr, "%s",str);
+	exit(EXIT_SUCCESS);
+}
+
 char *
 mkcmd(char *cmd, char *arg){
 	char *str;	

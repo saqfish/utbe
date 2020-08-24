@@ -8,4 +8,5 @@ typedef struct{
 	char channelTitle[50];
 } video;
 
-video * getvids();
+int utbftch(char *);
+int utbprse();
