@@ -1,4 +1,4 @@
-#include <json.h>
+#include <jansson.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,20 +10,16 @@ int
 main(int arc, char **argv){
 	FILE *fp;
 	int status;
+	char *str, *cmd;
+	char qurl[MAX_URL] = URL; 
+	char *line = NULL;
 	size_t len;
 	ssize_t nread;
-	char *line = NULL;
-	char *lines;
-	char *qurl, *cmd;
 
-	video videos[50];
+	video *vids;
 
-	json_object *jobj = NULL;
-
-	char *url = "https://www.googleapis.com/youtube/v3/search?";
-
-	qurl = mkprms(url, 3, "part", "snippet", "q", argv[1], "key", argv[2]);
-
+	mkprms(qurl, 3, "part", "snippet", "q", argv[1], "key", argv[2]);
+	mkprms(qurl, 1, "maxResults", "15");
 	cmd = mkcmd("curl -s ", qurl);
 
 	printf("cmd: %s\n", cmd);
@@ -34,72 +30,72 @@ main(int arc, char **argv){
 
 	int count = 0;
 	while ((nread = getline(&line, &len, fp)) != -1){
-		if(count) lines = realloc(lines, ((count+nread) * sizeof(lines)));	
-		else  lines = calloc(nread, sizeof(lines));	
+		if(count) str = realloc(str, ((count+nread) * sizeof(str)));	
+		else  str = calloc(nread, sizeof(str));	
 
 
-		strcat(lines, line);
+		strcat(str, line);
 		count+=nread;
 	}
 	free(line);
 
 	status = pclose(fp);
 
-	jobj = json_tokener_parse(lines);
-	json_object_iter iter;
-	
-	enum json_type type;	
-	json_object_object_foreachC(jobj, iter) {
-		json_object *val = iter.val;
-		char *key = iter.key;
-		type = json_object_get_type(val);
-		if(type == json_type_array && (strcmp(key,"items") == 0)){
-			int len;
-			len = json_object_array_length(val);
-			for(int i=0; i<len; i++){
-				json_object_iter aiter;
-				json_object *aobj = NULL;
-				enum json_type atype;	
+	vids = getvids(str);
 
-				aobj = json_object_array_get_idx(val,i);
-
-				json_object_object_foreachC(aobj, aiter) {
-					json_object_iter siter;
-					json_object *sobj = NULL;
-					enum json_type stype;	
-					char *akey = aiter.key;
-
-					sobj = aiter.val;
-					stype = json_object_get_type(sobj);
-
-					if(stype == json_type_object && (strcmp(akey,"snippet") == 0)){
-						json_object_object_foreachC(sobj, siter) {
-							json_object_iter csiter;
-							json_object *csobj = NULL;
-							enum json_type cstype;	
-							char *skey = siter.key;
-						
-							csobj = siter.val;	
-							cstype = json_object_get_type(csobj);
-
-							if(cstype == json_type_string){
-								const char *str = json_object_get_string(csobj);
-								if((strcmp(skey, "publishedAt") == 0)) videos[i].publishedAt = str;
-								if((strcmp(skey, "channelId") == 0)) videos[i].channelId = str;
-								if((strcmp(skey, "title") == 0)) videos[i].title = str;
-								if((strcmp(skey, "description") == 0)) videos[i].description = str;
-								if((strcmp(skey, "channelTitle") == 0)) videos[i].channelTitle = str;
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	printf("%s\n", videos[3].title);
-	free(lines);
+	printf("%s\n", vids[2].title);
+	free(str);
 	free(cmd);
-	free(qurl);
-	json_object_put(jobj);
+	free(vids);
+}
+
+video * 
+getvids(char *str){
+	video *videos = calloc(50,sizeof(*videos));
+	json_t *jobj;
+	json_t *items;
+	json_error_t jerr;
+
+	jobj = json_loads(str, 0, &jerr);
+
+	if(!jobj) printf("Couldn't parse JSON!\n");
+	
+	items = json_object_get(jobj, "items");
+
+	if(!items) printf("Couldn't get items\n");
+
+	if(!json_is_array(items)) printf("Couldn't get items\n");
+	else printf("items is an array\n");
+
+	for(int i=0; i<json_array_size(items); i++){
+		json_t *item, *snippet;
+		json_t *publishedAt, *channelId, *title, *description, *channelTitle;
+		char *pm, cim, tm, dm, ctm;
+		item = json_array_get(items, i);
+		snippet = json_object_get(item, "snippet");
+
+		if(!snippet) printf("Couldn't get snippet\n");
+		if(!json_is_object(snippet)) printf("invalid snnipet\n");
+
+		publishedAt = json_object_get(snippet, "publishedAt");
+		channelId = json_object_get(snippet, "channelId");
+		title = json_object_get(snippet, "title");
+		description = json_object_get(snippet, "description");
+		channelTitle = json_object_get(snippet, "channelTitle");
+
+		if(!json_is_string(publishedAt)) printf("Couldn't get publishedAt\n");
+		if(!json_is_string(channelId)) printf("Couldn't get channelId\n");
+		if(!json_is_string(title)) printf("Couldn't get title\n");
+		if(!json_is_string(description)) printf("Couldn't get description\n");
+		if(!json_is_string(channelTitle)) printf("Couldn't get channelTitle\n");
+
+		strcpy(videos[i].publishedAt,json_string_value(publishedAt));
+		strcpy(videos[i].channelId, json_string_value(channelId));
+		strcpy(videos[i].title, json_string_value(title));
+		strcpy(videos[i].description, json_string_value(description));
+		strcpy(videos[i].channelTitle, json_string_value(channelTitle));
+	}
+	json_decref(jobj);
+
+	return videos;
 }

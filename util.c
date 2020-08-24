@@ -15,41 +15,37 @@ mkcmd(char *cmd, char *arg){
 	return str;
 }
 
-char *
+int
 mkprms(char *url, int nargs, ...){
 	int slen;
-	char *arg, *arg2, *str, *final;
+	char *arg, *arg2;
+	char str[1993] = "";
 	va_list ap;
 
 	va_start(ap, nargs);
 
-	slen = 0;
 	for(int i=0; i<(nargs*2); i++){
+		int len = 0;
 		char *sym;
 		arg = va_arg(ap, char *);
 
-		if(i%2) slen += strlen(arg) + 1; // +1 for &
-		else slen += strlen(arg) + 1;// +1 for equal 
+		printf("%d(+%d) ", len, strlen(arg));
 
-		slen++; // +1 for \0
-
-		if(i) str = realloc(str, (slen * sizeof(str)));
-		else str = calloc(slen, sizeof(str));
+		len += strlen(arg);
 
 		if(i % 2) sym = "=";
 		else  sym = "&";
 
-		strcat(str, sym);
-		strcat(str, arg);
+		strcat(str,sym);
+		strcat(str,arg);
+
+		printf("%s%s:  %s\n", sym, arg, str);
 	}
 
 
-	slen+=strlen(url);
-	slen++; // +1 for \0
-	final = malloc(slen * sizeof(char));
+	printf("total: %d\n", strlen(url) + strlen(str));
 
-	sprintf(final, "%s%s", url ,str);
-	free(str);
+	strcat(url, str);	
 
-	return final;	
+	return 1;	
 }

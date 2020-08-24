@@ -1,8 +1,6 @@
 CC = gcc -g
 OBJS = utbe.o util.o 
-LDLIBS = -l json-c 
-LDFLAGS = -L /lib
-CFLAGS = -I /usr/include/json-c/ 
+LDLIBS = -ljansson
 
 utbe: $(OBJS)
 	$(CC) $(OBJS) $(LDLIBS) $(LDFLAGS) -o utbe

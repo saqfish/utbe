@@ -1,8 +1,11 @@
+#define URL "https://www.googleapis.com/youtube/v3/search?"
+
 typedef struct{
-	const char* publishedAt;
-	const char* channelId;
-	const char *title;
-	const char* description;
-	const char* channelTitle;
+	char publishedAt[20];
+	char channelId[20];
+	char title[50];
+	char description[50];
+	char channelTitle[50];
 } video;
 
+video * getvids();
