@@ -30,12 +30,14 @@ main(int argc, char **argv){
 				break;
 			case 'r':
 				{
-					char *tok, *tmp;
+					char *tok, *itok, *tmp;
 					int pcnt = 0;
-					while(tok = strtok_r(optarg, ":", &optarg)){
-						if(pcnt % 2)mkprms(qurl, 1, tmp, tok);
-						else tmp = tok;
-						pcnt++;	
+					while(tok = strtok_r(optarg, "=", &optarg)){
+						while(itok = strtok_r(tok, ",", &tok)){
+							if(pcnt % 2)mkprms(qurl, 1, tmp, itok);
+							else tmp = itok;
+							pcnt++;	
+						}
 					}
 					break;
 				}
