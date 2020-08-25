@@ -16,6 +16,7 @@ int
 main(int argc, char **argv){
 	int opt;
 	char *cmd;
+	int kflag;
 
 	while((opt = getopt(argc, argv, "q:c:k:r:")) != -1){
 		switch(opt){
@@ -24,6 +25,7 @@ main(int argc, char **argv){
 				break;
 			case 'c':
 				mkprms(qurl, 1, "maxResults", optarg);
+				kflag = 1;
 				break;
 			case 'k':
 				mkprms(qurl, 1, "key", optarg);
@@ -46,17 +48,20 @@ main(int argc, char **argv){
 
 	}
 
+
+	char *utkey = getenv("UTKEY");
+	if(utkey != NULL) mkprms(qurl, 1, "key", utkey);
+
 	if(argc == 1) exit(EXIT_FAILURE);
 
 	cmd = mkcmd("curl -s ", qurl);
-	printf("cmd: %s\n", cmd);
 	
 	if(!utbftch(cmd)) pdie("Couldn't get json\n");
 
 	if(!utbprse()) pdie("Couldn't parse json\n");
 
 	for(int i=0;i<vcnt;i++)
-		printf("%s\n", vids[i].title);
+		printf("Channel: %s\nID: %s\nTitle: %s\nDesc: %s\nPublished: %s\n-------------\n", vids[i].channelTitle, vids[i].channelId, vids[i].title, vids[i].description, vids[i].publishedAt);
 
 	free(jstr);
 	free(cmd);
@@ -99,19 +104,16 @@ utbprse(){
 
 	jobj = json_loads(jstr, 0, &jerr);
 
-	if(!jobj || !json_is_object(jobj)) return 0;
-
 	utberr = json_object_get(jobj, "error");
-	if(utberr && json_is_object(utberr)){
+	if(utberr != NULL){
 		json_t *errmsg = json_object_get(utberr, "message");
-		if(errmsg || json_is_object(errmsg)) 
+		if(errmsg != NULL) 
 			fprintf(stderr, "Error: %s\n", json_string_value(errmsg));
 		return 0;
 	}
 	
 	items = json_object_get(jobj, "items");
-
-	if(!items || !json_is_array(items)) return 0;
+	if(items == NULL) return 0;
 
 	for(int i=0; i<json_array_size(items); i++){
 		char *pm, cim, tm, dm, ctm;
@@ -121,7 +123,7 @@ utbprse(){
 		item = json_array_get(items, i);
 		snippet = json_object_get(item, "snippet");
 
-		if(!snippet ||!json_is_object(snippet)) return 0;
+		if(snippet == NULL) return 0;
 
 		publishedAt = json_object_get(snippet, "publishedAt");
 		channelId = json_object_get(snippet, "channelId");
@@ -129,18 +131,13 @@ utbprse(){
 		description = json_object_get(snippet, "description");
 		channelTitle = json_object_get(snippet, "channelTitle");
 
-		if(!json_is_string(publishedAt) || 
-				!json_is_string(channelId) 
-				|| !json_is_string(title) 
-				|| !json_is_string(description) 
-				|| !json_is_string(channelTitle)) 
-			return 0;
 		vcnt++;
-		strcpy(vids[i].publishedAt,json_string_value(publishedAt));
-		strcpy(vids[i].channelId, json_string_value(channelId));
-		strcpy(vids[i].title, json_string_value(title));
-		strcpy(vids[i].description, json_string_value(description));
-		strcpy(vids[i].channelTitle, json_string_value(channelTitle));
+
+		if(publishedAt != NULL && json_is_string(publishedAt)) strcpy(vids[i].publishedAt,json_string_value(publishedAt));
+		if(channelId != NULL && json_is_string(channelId)) strcpy(vids[i].channelId, json_string_value(channelId));
+		if(title != NULL && json_is_string(title)) strcpy(vids[i].title, json_string_value(title));
+		if(description != NULL && json_is_string(description)) strcpy(vids[i].description, json_string_value(description));
+		if(channelTitle != NULL && json_is_string(channelTitle)) strcpy(vids[i].channelTitle, json_string_value(channelTitle));
 	}
 
 	json_decref(jobj);
