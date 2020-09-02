@@ -3,24 +3,19 @@
 #define MAX_URL 2038
 
 typedef struct{
-	char publishedAt[22];
-	char channelId[30];
-	char title[100];
-	char description[1000];
-	char channelTitle[30];
-} video;
-
+	int valcnt;
+	char **values;
+} item;
 
 #ifndef UTBE
-#define EXTERN extern
+#define UTBE extern
 #endif
 
-EXTERN int vcnt;
-EXTERN int sjsn;
-EXTERN char qurl[MAX_URL]; 
-EXTERN char *jstr;
-EXTERN video *vids;
-
+UTBE int vcnt;
+UTBE int sjsn;
+UTBE char qurl[MAX_URL]; 
+UTBE char *jstr;
+UTBE item *itms;
 
 int utbftch(char *);
 int utbprse();

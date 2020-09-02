@@ -14,6 +14,8 @@ main(int argc, char **argv){
 	char *cmd;
 	int kflag;
 
+	itms = NULL;
+
 	strcpy(qurl,URL);
 
 	while((opt = getopt(argc, argv, "t:jq:c:k:r:")) != -1){
@@ -53,7 +55,7 @@ main(int argc, char **argv){
 	}
 
 
-	printf("qurl: %s\n",qurl);
+	//printf("qurl: %s\n",qurl);
 	char *utkey = getenv("UTKEY");
 	if(utkey != NULL) mkprms(qurl, 1, "key", utkey);
 
@@ -65,12 +67,12 @@ main(int argc, char **argv){
 
 	if(!utbprse()) pdie("Couldn't parse json\n");
 
-	for(int i=0;i<vcnt;i++)
-		printf("%s,%s,%s,%s,%s\n", vids[i].channelTitle, vids[i].channelId, vids[i].title, vids[i].description, vids[i].publishedAt);
+	/*for(int i=0;i<vcnt;i++)
+		printf("%s,%s,%s,%s,%s\n", vids[i].channelTitle, vids[i].channelId, vids[i].title, vids[i].description, vids[i].publishedAt);*/
 
 	free(jstr);
 	free(cmd);
-	free(vids);
+	free(itms);
 	return EXIT_SUCCESS;
 }
 
@@ -82,8 +84,8 @@ utbftch(char *cmd){
 	size_t len;
 	ssize_t nread;
 
-	fp = popen(cmd, "r");
-	//fp = fopen("test", "r");
+	//fp = popen(cmd, "r");
+	fp = fopen("test", "r");
 	if (fp == NULL) return 0;
 
 	int count = 0;
