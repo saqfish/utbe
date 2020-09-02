@@ -22,9 +22,15 @@ mkcmd(char *cmd, char *arg){
 }
 
 int
+mkrsrc(char *url, char *rsrc){
+	strcat(url, rsrc);
+	strcat(url, "?");
+	return 1;
+}
+
+int
 mkprms(char *url, int nargs, ...){
-	int slen;
-	char *arg, *arg2;
+	char *arg;
 	char str[1993] = "";
 	va_list ap;
 
@@ -44,7 +50,6 @@ mkprms(char *url, int nargs, ...){
 		strcat(str,arg);
 
 	}
-
 	strcat(url, str);	
 	return 1;	
 }

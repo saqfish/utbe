@@ -1,4 +1,4 @@
-#define URL "https://www.googleapis.com/youtube/v3/search?"
+#define URL "https://www.googleapis.com/youtube/v3/"
 
 typedef struct{
 	char publishedAt[22];

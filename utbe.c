@@ -12,14 +12,22 @@ char qurl[MAX_URL] = URL;
 char *jstr;
 video *vids;
 
+int sjsn;
+
 int
 main(int argc, char **argv){
 	int opt;
 	char *cmd;
 	int kflag;
 
-	while((opt = getopt(argc, argv, "q:c:k:r:")) != -1){
+	while((opt = getopt(argc, argv, "t:jq:c:k:r:")) != -1){
 		switch(opt){
+			case 't':
+				mkrsrc(qurl, optarg);
+				break;
+			case 'j':
+				sjsn=1;
+				break;
 			case 'q':
 				mkprms(qurl, 2, "part", "snippet", "q", optarg);
 				break;
@@ -35,7 +43,7 @@ main(int argc, char **argv){
 					char *tok, *itok, *tmp;
 					int pcnt = 0;
 					while(tok = strtok_r(optarg, "=", &optarg)){
-						while(itok = strtok_r(tok, ",", &tok)){
+						while(itok = strtok_r(tok, "/", &tok)){
 							if(pcnt % 2)mkprms(qurl, 1, tmp, itok);
 							else tmp = itok;
 							pcnt++;	
@@ -49,6 +57,7 @@ main(int argc, char **argv){
 	}
 
 
+	printf("qurl: %s\n",qurl);
 	char *utkey = getenv("UTKEY");
 	if(utkey != NULL) mkprms(qurl, 1, "key", utkey);
 
@@ -61,7 +70,7 @@ main(int argc, char **argv){
 	if(!utbprse()) pdie("Couldn't parse json\n");
 
 	for(int i=0;i<vcnt;i++)
-		printf("Channel: %s\nID: %s\nTitle: %s\nDesc: %s\nPublished: %s\n-------------\n", vids[i].channelTitle, vids[i].channelId, vids[i].title, vids[i].description, vids[i].publishedAt);
+		printf("%s,%s,%s,%s,%s\n", vids[i].channelTitle, vids[i].channelId, vids[i].title, vids[i].description, vids[i].publishedAt);
 
 	free(jstr);
 	free(cmd);
@@ -78,6 +87,7 @@ utbftch(char *cmd){
 	ssize_t nread;
 
 	fp = popen(cmd, "r");
+	//fp = fopen("test", "r");
 	if (fp == NULL) return 0;
 
 	int count = 0;
@@ -98,6 +108,8 @@ utbftch(char *cmd){
 
 int
 utbprse(){
+	if(sjsn) printf("%s\n",jstr);
+
 	vids = calloc(50,sizeof(*vids));
 	json_t *jobj, *utberr, *items;
 	json_error_t jerr;
