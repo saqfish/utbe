@@ -72,6 +72,13 @@ main(int argc, char **argv){
 
 	free(jstr);
 	free(cmd);
+	for(int i=0;i<vcnt;i++){
+		for(int j=0;j<(&itms[i])->valcnt;j++){
+			free((&itms[i])->values[j]);
+			(&itms[i])->values[j] = NULL;
+		}
+		free((&itms[i])->values);
+	}
 	free(itms);
 	return EXIT_SUCCESS;
 }
