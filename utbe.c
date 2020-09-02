@@ -67,11 +67,17 @@ main(int argc, char **argv){
 
 	if(!utbprse()) pdie("Couldn't parse json\n");
 
-	/*for(int i=0;i<vcnt;i++)
-		printf("%s,%s,%s,%s,%s\n", vids[i].channelTitle, vids[i].channelId, vids[i].title, vids[i].description, vids[i].publishedAt);*/
+
+	for(int i=0;i<vcnt;i++){
+		printf("%d: \n", i);
+		for(int j=0;j<(&itms[i])->valcnt;j++){
+			printf("-%s\n", (&itms[i])->values[j]);
+		}
+	}
 
 	free(jstr);
 	free(cmd);
+
 	for(int i=0;i<vcnt;i++){
 		for(int j=0;j<(&itms[i])->valcnt;j++){
 			free((&itms[i])->values[j]);
@@ -86,13 +92,12 @@ main(int argc, char **argv){
 int
 utbftch(char *cmd){
 	FILE *fp;
-	int status;
 	char *line = NULL;
 	size_t len;
 	ssize_t nread;
 
 	//fp = popen(cmd, "r");
-	fp = fopen("test", "r");
+	fp = fopen("playlist", "r");
 	if (fp == NULL) return 0;
 
 	int count = 0;
@@ -106,7 +111,7 @@ utbftch(char *cmd){
 		count+=nread;
 	}
 	free(line);
-	status = pclose(fp);
+	pclose(fp);
 
 	return 1;
 }
