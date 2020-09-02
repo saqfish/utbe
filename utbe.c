@@ -1,24 +1,20 @@
-#include <jansson.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
+#include <stdlib.h>
 #include <unistd.h>
 
+#define UTBE
 #include "utbe.h"
 #include "util.h"
 
-int vcnt;
-char qurl[MAX_URL] = URL; 
-char *jstr;
-video *vids;
-
-int sjsn;
 
 int
 main(int argc, char **argv){
 	int opt;
 	char *cmd;
 	int kflag;
+
+	strcpy(qurl,URL);
 
 	while((opt = getopt(argc, argv, "t:jq:c:k:r:")) != -1){
 		switch(opt){
@@ -103,55 +99,5 @@ utbftch(char *cmd){
 	free(line);
 	status = pclose(fp);
 
-	return 1;
-}
-
-int
-utbprse(){
-	if(sjsn) printf("%s\n",jstr);
-
-	vids = calloc(50,sizeof(*vids));
-	json_t *jobj, *utberr, *items;
-	json_error_t jerr;
-
-	jobj = json_loads(jstr, 0, &jerr);
-
-	utberr = json_object_get(jobj, "error");
-	if(utberr != NULL){
-		json_t *errmsg = json_object_get(utberr, "message");
-		if(errmsg != NULL) 
-			fprintf(stderr, "Error: %s\n", json_string_value(errmsg));
-		return 0;
-	}
-	
-	items = json_object_get(jobj, "items");
-	if(items == NULL) return 0;
-
-	for(int i=0; i<json_array_size(items); i++){
-		char *pm, cim, tm, dm, ctm;
-		json_t *item, *snippet;
-		json_t *publishedAt, *channelId, *title, *description, *channelTitle;
-
-		item = json_array_get(items, i);
-		snippet = json_object_get(item, "snippet");
-
-		if(snippet == NULL) return 0;
-
-		publishedAt = json_object_get(snippet, "publishedAt");
-		channelId = json_object_get(snippet, "channelId");
-		title = json_object_get(snippet, "title");
-		description = json_object_get(snippet, "description");
-		channelTitle = json_object_get(snippet, "channelTitle");
-
-		vcnt++;
-
-		if(publishedAt != NULL && json_is_string(publishedAt)) strcpy(vids[i].publishedAt,json_string_value(publishedAt));
-		if(channelId != NULL && json_is_string(channelId)) strcpy(vids[i].channelId, json_string_value(channelId));
-		if(title != NULL && json_is_string(title)) strcpy(vids[i].title, json_string_value(title));
-		if(description != NULL && json_is_string(description)) strcpy(vids[i].description, json_string_value(description));
-		if(channelTitle != NULL && json_is_string(channelTitle)) strcpy(vids[i].channelTitle, json_string_value(channelTitle));
-	}
-
-	json_decref(jobj);
 	return 1;
 }
