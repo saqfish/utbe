@@ -1,5 +1,5 @@
-CC = gcc -g
-OBJS = utbe.o util.o parse.o
+CC = gcc -std=c99
+OBJS = utbe.o util.o parse.o fetch.o output.o
 LDLIBS = -ljansson
 
 utbe: $(OBJS)
@@ -13,6 +13,12 @@ util.o: util.c util.h
 
 parse.o: parse.c parse.h 
 	$(CC) -c parse.c 
+
+fetch.o: fetch.c fetch.h 
+	$(CC) -c fetch.c 
+
+output.o: output.c output.h 
+	$(CC) -c output.c 
 
 clean: 
 	rm *.o utbe

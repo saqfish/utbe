@@ -1,12 +1,14 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 
 #define UTBE
 #include "utbe.h"
 #include "util.h"
-
+#include "fetch.h"
+#include "parse.h"
+#include "output.h"
 
 int
 main(int argc, char **argv){
@@ -16,7 +18,7 @@ main(int argc, char **argv){
 
 	itms = NULL;
 
-	strcpy(qurl,URL);
+	mkurl(qurl);
 
 	while((opt = getopt(argc, argv, "t:jq:c:k:r:")) != -1){
 		switch(opt){
@@ -37,47 +39,35 @@ main(int argc, char **argv){
 				mkprms(qurl, 1, "key", optarg);
 				break;
 			case 'r':
-				{
-					char *tok, *itok, *tmp;
-					int pcnt = 0;
-					while(tok = strtok_r(optarg, "=", &optarg)){
-						while(itok = strtok_r(tok, "/", &tok)){
-							if(pcnt % 2)mkprms(qurl, 1, tmp, itok);
-							else tmp = itok;
-							pcnt++;	
-						}
-					}
-					break;
-				}
+				spltprms(qurl, optarg);
+				break;
 			default: pdie("Bad input\n");
 		}
 
 	}
 
 
-	//printf("qurl: %s\n",qurl);
+	if(argc == 1) exit(EXIT_FAILURE);
+
 	char *utkey = getenv("UTKEY");
 	if(utkey != NULL) mkprms(qurl, 1, "key", utkey);
-
-	if(argc == 1) exit(EXIT_FAILURE);
 
 	cmd = mkcmd("curl -s ", qurl);
 	
 	if(!utbftch(cmd)) pdie("Couldn't get json\n");
-
 	if(!utbprse()) pdie("Couldn't parse json\n");
 
+	output();
 
-	for(int i=0;i<vcnt;i++){
-		printf("%d: \n", i);
-		for(int j=0;j<(&itms[i])->valcnt;j++){
-			printf("-%s\n", (&itms[i])->values[j]);
-		}
-	}
-
-	free(jstr);
+	clnup();
 	free(cmd);
 
+	return EXIT_SUCCESS;
+}
+
+void
+clnup(){
+	free(jstr);
 	for(int i=0;i<vcnt;i++){
 		for(int j=0;j<(&itms[i])->valcnt;j++){
 			free((&itms[i])->values[j]);
@@ -86,32 +76,4 @@ main(int argc, char **argv){
 		free((&itms[i])->values);
 	}
 	free(itms);
-	return EXIT_SUCCESS;
-}
-
-int
-utbftch(char *cmd){
-	FILE *fp;
-	char *line = NULL;
-	size_t len;
-	ssize_t nread;
-
-	//fp = popen(cmd, "r");
-	fp = fopen("playlist", "r");
-	if (fp == NULL) return 0;
-
-	int count = 0;
-	while ((nread = getline(&line, &len, fp)) != -1){
-		if(count) jstr = realloc(jstr, ((count+nread) * sizeof(jstr)));	
-		else  jstr = calloc(nread, sizeof(jstr));	
-
-		if(jstr == NULL) return 0;
-
-		strcat(jstr, line);
-		count+=nread;
-	}
-	free(line);
-	pclose(fp);
-
-	return 1;
 }

@@ -17,5 +17,4 @@ UTBE char qurl[MAX_URL];
 UTBE char *jstr;
 UTBE item *itms;
 
-int utbftch(char *);
-int utbprse();
+void clnup();

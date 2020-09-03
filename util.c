@@ -1,7 +1,11 @@
+#define _POSIX_C_SOURCE 200809L
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
+#include "utbe.h"
+#include "util.h"
 
 void
 pdie(char *str) {
@@ -19,6 +23,12 @@ mkcmd(char *cmd, char *arg){
 
 	sprintf(str, "%s \'%s\'", cmd, arg);
 	return str;
+}
+
+int
+mkurl(char *url){
+	strcpy(url,URL);
+	return 1;
 }
 
 int
@@ -52,4 +62,17 @@ mkprms(char *url, int nargs, ...){
 	}
 	strcat(url, str);	
 	return 1;	
+}
+
+int
+spltprms(char *url, char *args){
+	char *tok, *itok, *tmp;
+	int pcnt = 0;
+	while(tok = strtok_r(args, "=", &args)){
+		while(itok = strtok_r(tok, "/", &tok)){
+			if(pcnt % 2)mkprms(url, 1, tmp, itok);
+			else tmp = itok;
+			pcnt++;	
+		}
+	}
 }
