@@ -7,7 +7,7 @@
 #include "fetch.h"
 
 int
-utbftch(char *cmd){
+ftch(char *cmd){
 	FILE *fp;
 	char *line = NULL;
 	size_t len;

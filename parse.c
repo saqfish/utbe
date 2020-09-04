@@ -4,7 +4,7 @@
 #include "parse.h"
 
 int
-utbprse(){
+prse(){
 	json_t *jobj, *utberr, *items, *kind;
 	json_error_t jerr;
 
@@ -49,7 +49,7 @@ utbprse(){
 	return prsed;
 }
 
-int itmvadd(item *itm, const char *str){
+int additm(item *itm, const char *str){
 	if(itm->valcnt) {
 		int len = (itm->valcnt+1)*sizeof(*itm->values);
 		itm->values = realloc(itm->values, len);
@@ -68,17 +68,21 @@ int itmvadd(item *itm, const char *str){
 
 int slrprse(json_t *items){
 	for(int i=0; i<json_array_size(items); i++){
-		json_t *item, *snippet;
-		json_t *publishedAt, *channelId, *title, *description, *channelTitle;
+		json_t *item, *id, *snippet;
+		json_t *kind, *publishedAt, *channelId, *title, *description, *channelTitle;
 
 		if(vcnt) itms = realloc(itms,(vcnt+1)*sizeof(*itms));
 		(&itms[i])->valcnt = 0;
 
 		item = json_array_get(items, i);
-		snippet = json_object_get(item, "snippet");
 
+		id = json_object_get(item, "id");
+		if(id == NULL) return 0;
+
+		snippet = json_object_get(item, "snippet");
 		if(snippet == NULL) return 0;
 
+		kind = json_object_get(id, "kind");
 		publishedAt = json_object_get(snippet, "publishedAt");
 		channelId = json_object_get(snippet, "channelId");
 		title = json_object_get(snippet, "title");
@@ -87,11 +91,12 @@ int slrprse(json_t *items){
 
 		vcnt++;
 
-		if(publishedAt != NULL && json_is_string(publishedAt)) itmvadd(&itms[i],json_string_value(publishedAt));
-		if(channelId != NULL && json_is_string(channelId)) itmvadd(&itms[i], json_string_value(channelId));
-		if(title != NULL && json_is_string(title)) itmvadd(&itms[i], json_string_value(title));
-		if(description != NULL && json_is_string(description)) itmvadd(&itms[i], json_string_value(description));
-		if(channelTitle != NULL && json_is_string(channelTitle)) itmvadd(&itms[i], json_string_value(channelTitle));
+		if(kind != NULL && json_is_string(kind)) additm(&itms[i], json_string_value(kind) + strlen(KIND_PRE));
+		if(channelId != NULL && json_is_string(channelId)) additm(&itms[i], json_string_value(channelId));
+		if(channelTitle != NULL && json_is_string(channelTitle)) additm(&itms[i], json_string_value(channelTitle));
+		if(title != NULL && json_is_string(title)) additm(&itms[i], json_string_value(title));
+		if(description != NULL && json_is_string(description)) additm(&itms[i], json_string_value(description));
+		if(publishedAt != NULL && json_is_string(publishedAt)) additm(&itms[i],json_string_value(publishedAt));
 	}
 	return 1;
 }
@@ -122,8 +127,8 @@ clrprse(json_t *items){
 
 		vcnt++;
 
-		if(id != NULL && json_is_string(id)) itmvadd(&itms[i], json_string_value(id));
-		if(uploads != NULL && json_is_string(uploads)) itmvadd(&itms[i], json_string_value(uploads));
+		if(id != NULL && json_is_string(id)) additm(&itms[i], json_string_value(id));
+		if(uploads != NULL && json_is_string(uploads)) additm(&itms[i], json_string_value(uploads));
 	}
 	return 1;
 }
@@ -131,15 +136,18 @@ clrprse(json_t *items){
 int 
 pilrprse(json_t *items){
 	for(int i=0; i<json_array_size(items); i++){
-		json_t *item, *snippet;
+		json_t *item, *kind, *snippet;
 		json_t *publishedAt, *channelId, *title, *description, *channelTitle;
 
 		if(vcnt) itms = realloc(itms,(vcnt+1)*sizeof(*itms));
 		(&itms[i])->valcnt = 0;
 
 		item = json_array_get(items, i);
-		snippet = json_object_get(item, "snippet");
 
+		kind = json_object_get(item, "kind");
+		if(kind == NULL) return 0;
+
+		snippet = json_object_get(item, "snippet");
 		if(snippet == NULL) return 0;
 
 		publishedAt = json_object_get(snippet, "publishedAt");
@@ -150,11 +158,12 @@ pilrprse(json_t *items){
 
 		vcnt++;
 
-		if(publishedAt != NULL && json_is_string(publishedAt)) itmvadd(&itms[i],json_string_value(publishedAt));
-		if(channelId != NULL && json_is_string(channelId)) itmvadd(&itms[i], json_string_value(channelId));
-		if(title != NULL && json_is_string(title)) itmvadd(&itms[i], json_string_value(title));
-		if(description != NULL && json_is_string(description)) itmvadd(&itms[i], json_string_value(description));
-		if(channelTitle != NULL && json_is_string(channelTitle)) itmvadd(&itms[i], json_string_value(channelTitle));
+		if(kind != NULL && json_is_string(kind)) additm(&itms[i],json_string_value(kind));
+		if(publishedAt != NULL && json_is_string(publishedAt)) additm(&itms[i],json_string_value(publishedAt));
+		if(channelId != NULL && json_is_string(channelId)) additm(&itms[i], json_string_value(channelId));
+		if(title != NULL && json_is_string(title)) additm(&itms[i], json_string_value(title));
+		if(description != NULL && json_is_string(description)) additm(&itms[i], json_string_value(description));
+		if(channelTitle != NULL && json_is_string(channelTitle)) additm(&itms[i], json_string_value(channelTitle));
 	}
 	return 1;
 }

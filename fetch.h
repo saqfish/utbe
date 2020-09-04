@@ -1,1 +1,1 @@
-int utbftch(char *);
+int ftch(char *);
