@@ -14,6 +14,8 @@ output(){
 			char *itmi = (&itms[i])->values[j];
 			if(!j) printf("%d", getknd(itmi));
 			else printf("%s", itmi);
+
+			if(j < (&itms[i])->valcnt -1 ) printf(",");
 		}
 		printf("\n");
 	}
@@ -21,9 +23,17 @@ output(){
 
 int
 getknd(char *kind){
-	char *k = kind + strlen(KIND_PRE);
-	if((strcmp("video", k)) == 0) return ID_VIDEO;
-	if((strcmp("channel", k)) == 0) return ID_CHANNEL;
-	if((strcmp("playlistItem", k)) == 0) return ID_PLAYLISTITEM;
+	int vchk = 0;	
+	int cchk = 0;	
+	int plichk = 0;	
+
+	vchk = (strcmp(KIND_VIDEO, kind) == 0);
+	cchk = (strcmp(KIND_CHANNEL, kind) == 0);
+	plichk = (strcmp(KIND_PLAYLISTITEM, kind) == 0);
+
+	if(vchk) return ID_VIDEO;
+	if(cchk) return ID_CHANNEL;
+	if(plichk) return ID_PLAYLISTITEM;
+
 	return 0;
 }
