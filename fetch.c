@@ -32,3 +32,28 @@ ftch(char *cmd){
 
 	return 1;
 }
+
+int
+fftch(char *file){
+ 	FILE *fp;
+ 	char *line = NULL;
+ 	size_t len;
+ 	ssize_t nread;
+ 
+ 	fp = fopen(file, "r");
+ 	if (fp == NULL) return 0;
+ 
+ 	int count = 0;
+ 	while ((nread = getline(&line, &len, fp)) != -1){
+ 		if(count) jstr = realloc(jstr, ((count+nread) * sizeof(jstr)));	
+ 		else  jstr = calloc(nread, sizeof(jstr));	
+ 
+ 		if(jstr == NULL) return 0;
+ 
+ 		strcat(jstr, line);
+ 		count+=nread;
+ 	}
+ 	free(line);
+ 	fclose(fp);
+ 	return 1;
+ }

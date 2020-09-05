@@ -46,6 +46,7 @@ prse(){
 	else fprintf(stderr, "Unknown type - ");
 
 	json_decref(jobj);
+
 	return prsed;
 }
 
@@ -98,6 +99,8 @@ int slrprse(json_t *items){
 		if(description != NULL && json_is_string(description)) additm(&itms[i], json_string_value(description));
 		if(publishedAt != NULL && json_is_string(publishedAt)) additm(&itms[i],json_string_value(publishedAt));
 	}
+
+	saveprse();
 	return 1;
 }
 
@@ -166,4 +169,12 @@ pilrprse(json_t *items){
 		if(channelTitle != NULL && json_is_string(channelTitle)) additm(&itms[i], json_string_value(channelTitle));
 	}
 	return 1;
+}
+
+void
+saveprse(){
+	FILE *fp;
+	fp = fopen("query", "w");	
+	fprintf(fp, "%s", jstr);
+	fclose(fp);
 }

@@ -57,20 +57,25 @@ main(int argc, char **argv){
 
 	}
 
-	if(argc == 1) usg();
 
 	char *utkey = getenv("UTKEY");
 	if(utkey != NULL) mkprms(qurl, 1, "key", utkey);
 
-	cmd = mkcmd("curl -s ", qurl);
 	
-	if(!ftch(cmd)) pdie("fetch failed \n");
+	if(argc == 1) {
+		if(!fftch("query")) pdie("fetch failed \n");
+	} else {
+		cmd = mkcmd("curl -s ", qurl);
+		if(!ftch(cmd)) pdie("read failed \n");
+	}
+
 	if(!prse()) pdie("parse failed \n");
 
 	output();
 
 	clnup();
-	free(cmd);
+
+	if(argc > 1)free(cmd);
 
 	return EXIT_SUCCESS;
 }

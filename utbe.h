@@ -4,6 +4,8 @@
 
 #define KIND_PRE "youtube#"
 #define KIND_VIDEO "video"
+#define KIND_CHANNEL "video"
+#define KIND_PLAYLISTITEM "video"
 #define KIND_SLR "searchListResponse"
 #define KIND_CLR "channelListResponse"
 #define KIND_PILR "playlistItemListResponse"
@@ -21,6 +23,7 @@ typedef struct{
 
 UTBE int vcnt;
 UTBE int sjsn;
+UTBE int sqry;
 UTBE char qurl[MAX_URL]; 
 UTBE char *jstr;
 UTBE item *itms;

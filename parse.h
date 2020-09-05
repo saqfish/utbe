@@ -1,6 +1,7 @@
 #include <jansson.h>
 
 int prse();
+void saveprse();
 
 int slrprse(json_t *);
 int clrprse(json_t *);
